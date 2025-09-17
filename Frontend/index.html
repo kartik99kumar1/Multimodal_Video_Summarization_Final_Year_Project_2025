@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Welcome to MultiModal Video Summarization</title>
+<style>
+/* (unchanged visual styles from your working version) */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  background: linear-gradient(135deg,#5b26a8 0%, #3b82f6 100%);
+  color:#fff;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding:48px 20px;
+}
+.wrap{width:100%;max-width:1200px;text-align:center}
+h1{font-size: clamp(28px, 4vw, 56px);margin-bottom:18px;font-weight:800;text-shadow:0 6px 20px rgba(0,0,0,0.25)}
+.upload-card{width:100%;max-width:760px;margin: 10px auto 28px;background: rgba(255,255,255,0.06);padding:16px 20px;border-radius:12px;display:flex;gap:12px;align-items:center;justify-content:center;box-shadow: 0 10px 30px rgba(9,10,25,0.12);transition: box-shadow .18s ease, transform .12s ease;cursor:pointer}
+.upload-card.dragover{box-shadow: 0 20px 60px rgba(0,0,0,0.35);transform: translateY(-4px);}
+.upload-info{ text-align:left; flex:1; min-width:220px }
+.upload-info b{ display:block; margin-bottom:6px; font-size:15px }
+.file-input{ display:flex; gap:10px; align-items:center; position:relative }
+.file-input input[type="file"]{ display:none }
+.choose-btn { background:linear-gradient(90deg,#ff7a3d 0%,#ff2b7a 100%); padding:10px 18px; border-radius:10px; color:white; border:none; cursor:pointer; font-weight:700 }
+.filename { font-size:14px; opacity:0.95; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.main-row{ display:flex; gap:36px; justify-content:center; flex-wrap:wrap; margin-bottom:38px }
+.btn{ background:linear-gradient(90deg,#ff7a3d 0%,#ff2b7a 100%); padding:18px 48px; border-radius:999px; border:none; color:#fff; font-weight:700; font-size:18px; box-shadow:0 18px 30px rgba(9,10,25,0.18); cursor:pointer; transition:transform .22s ease, box-shadow .22s ease, opacity .2s ease; min-width:360px }
+.btn:hover{ transform:translateY(-6px); box-shadow:0 26px 40px rgba(9,10,25,0.25) }
+.btn[disabled]{ opacity:.5; cursor:not-allowed }
+.sub-wrap{ margin-top:10px; display:flex; gap:18px; flex-direction:column; align-items:center; width:100%; max-width:640px; margin-left:auto; margin-right:auto }
+.sub-btn{ background:linear-gradient(90deg,#ff8a4b 0%,#ff3b74 100%); padding:12px 18px; border-radius:12px; border:none; color:#fff; font-weight:700; font-size:16px; box-shadow:0 12px 24px rgba(9,10,25,0.18); cursor:pointer; width:100%; max-width:360px; transition:transform .18s ease }
+.sub-hidden{ display:none }
+.processing{ margin-top:28px; display:flex; flex-direction:column; align-items:center; gap:12px }
+.loader-ring{ width:72px; height:72px; border-radius:50%; position:relative; animation:rot 1.5s linear infinite }
+.loader-ring::before { content:""; position:absolute; inset:0; border-radius:50%; border:8px solid rgba(255,255,255,0.14) }
+.loader-ring::after{ content:""; position:absolute; inset:10px; border-radius:50%; border:8px solid rgba(255,255,255,0.12); box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset }
+.loader-ring > .gap { position:absolute; top:0; left:0; right:0; bottom:0; border-radius:50%; clip-path: inset(0 0 50% 0); transform-origin:center; background: conic-gradient(#fff 0 25%, transparent 25% 100%); opacity:0.95; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.2)) }
+@keyframes rot{ to{ transform: rotate(360deg) } }
+.processing-text{ font-size:18px; font-weight:600; opacity:0.95; text-shadow: 0 6px 20px rgba(0,0,0,0.18) }
+.selected-label{ margin-top:10px; font-size:15px; opacity:.9; font-weight:600 }
+.results{ margin-top:20px; background: rgba(255,255,255,0.04); padding:14px; border-radius:10px; max-width:900px; margin-left:auto; margin-right:auto }
+.results pre{ color:#fff; font-size:14px; white-space:pre-wrap; word-break:break-word }
+.status{ margin-top:8px; font-size:14px; color:rgba(255,255,255,0.95); opacity:0.95 }
+.hint { font-size:13px; opacity:.9; margin-top:6px }
+.small-panel{ background: rgba(255,255,255,0.03); padding:12px; border-radius:10px; width:100%; max-width:560px; margin-top:12px; box-shadow:0 8px 20px rgba(0,0,0,0.12) }
+.small-row{ display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap }
+.upload-mini{ padding:8px 12px; background:rgba(255,255,255,0.04); border-radius:8px; display:flex; gap:8px; align-items:center; justify-content:center; width:100%; max-width:360px }
+.small-btn{ background:linear-gradient(90deg,#38bdf8 0%,#7c3aed 100%); padding:10px 14px; border-radius:8px; border:none; color:#fff; font-weight:700; cursor:pointer }
+@media (max-width:720px){ .btn{ min-width:260px; padding:14px 22px; font-size:16px } .upload-card{ flex-direction:column; align-items:flex-start; gap:10px; padding:12px } }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Welcome to MultiModal Video Summarization</h1>
+
+    <!-- Main upload (test.mp4) -->
+    <div id="uploadCard" class="upload-card" role="region" aria-label="Upload video" tabindex="0">
+      <div class="upload-info">
+        <b>Upload the test.mp4 video</b>
+        <div class="filename" id="fileHint">Make sure the file is named <code>test.mp4</code>. (If not, it will be uploaded as <code>test.mp4</code>.)</div>
+        <div class="hint">You can also drag & drop the video onto this box.</div>
+      </div>
+
+      <div class="file-input" aria-hidden="false">
+        <label class="choose-btn" id="chooseLabel" for="fileEl" role="button" tabindex="0">Choose file</label>
+        <input id="fileEl" type="file" accept="video/mp4" />
+        <div class="filename" id="selectedFile" title="">No file selected</div>
+      </div>
+    </div>
+
+    <!-- main actions -->
+    <div class="main-row" role="group" aria-label="Main actions">
+      <button id="fullBtn" class="btn" title="Start full video summarization">Full Video Summarization</button>
+      <button id="userBtn" class="btn" title="Show user request options">User Request Based Summarization</button>
+    </div>
+
+    <!-- processing area -->
+    <div id="processingArea" class="processing" style="display:none" aria-live="polite">
+      <div class="loader-ring" aria-hidden="true"><div class="gap"></div></div>
+      <div class="processing-text">Processing... <span id="timer">15:00</span></div>
+      <div id="selectedLabel" class="selected-label" style="display:none"></div>
+    </div>
+
+    <!-- Sub-options container -->
+    <div id="subContainer" class="sub-wrap sub-hidden" aria-hidden="true" style="margin-top:18px">
+      <button class="sub-btn" data-mode="timestamp" id="sub1">Time Stamp Based</button>
+      <button class="sub-btn" data-mode="presenter" id="sub2">Presenter Images Based</button>
+      <button class="sub-btn" data-mode="ocr" id="sub3">OCR - Title Slide Based (coming soon)</button>
+
+      <!-- TimeStamp small panel (hidden until timestamp clicked) -->
+      <div id="timestampPanel" class="small-panel" style="display:none">
+        <div style="font-weight:700; margin-bottom:8px">Time Stamp Based — Upload time.txt</div>
+        <div class="small-row">
+          <div class="upload-mini">
+            <label class="choose-btn" id="timeChoose">Choose time.txt</label>
+            <input id="timeFile" type="file" accept=".txt" style="display:none" />
+            <div class="filename" id="timeSelected">No file</div>
+          </div>
+          <button id="timeGetBtn" class="small-btn">Get Video (5:00)</button>
+        </div>
+        <div class="hint" style="text-align:left; margin-top:8px">Upload time.txt containing timestamps. Both test.mp4 and time.txt will be sent to backend.</div>
+      </div>
+
+      <!-- Presenter Image small panel (hidden until presenter clicked) -->
+      <div id="presenterPanel" class="small-panel" style="display:none">
+        <div style="font-weight:700; margin-bottom:8px">Presenter Images Based — Upload presenter image</div>
+        <div class="small-row">
+          <div class="upload-mini">
+            <label class="choose-btn" id="imgChoose">Choose image</label>
+            <input id="imgFile" type="file" accept=".png,.jpg,.jpeg" style="display:none" />
+            <div class="filename" id="imgSelected">No file</div>
+          </div>
+          <button id="imgGetBtn" class="small-btn">Get Video (10:00)</button>
+        </div>
+        <div class="hint" style="text-align:left; margin-top:8px">Upload presenter image (PNG/JPG). Both test.mp4 and image will be sent to backend.</div>
+      </div>
+    </div>
+
+    <!-- Results area -->
+    <div id="resultsArea" class="results" style="display:none">
+      <div><strong>Summary (text):</strong></div>
+      <pre id="summaryText">-</pre>
+      <div style="height:10px"></div>
+      <div><strong>Video:</strong></div>
+      <div style="margin-top:8px">
+        <a id="downloadLink" href="#" target="_blank" rel="noopener" style="color:#fff; font-weight:700">Download / Open summary_fixed.mp4</a>
+      </div>
+      <div style="margin-top:12px">
+        <video id="previewVideo" controls style="max-width:100%; margin-top:12px; border-radius:8px; display:none"></video>
+      </div>
+    </div>
+
+    <div id="status" class="status" style="display:none"></div>
+  </div>
+
+<script>
+/* ============ CONFIG ============ */
+const BACKEND_URL = 'https://8ddbd158cd20.ngrok-free.app'; // <-- replace with your ngrok URL
+
+/* ============ Elements ============ */
+const fileEl = document.getElementById('fileEl');
+const selectedFile = document.getElementById('selectedFile');
+const chooseLabel = document.getElementById('chooseLabel');
+const fullBtn = document.getElementById('fullBtn');
+const userBtn = document.getElementById('userBtn');
+const subContainer = document.getElementById('subContainer');
+const subButtons = Array.from(document.querySelectorAll('.sub-btn'));
+const processingArea = document.getElementById('processingArea');
+const timerEl = document.getElementById('timer');
+const selectedLabel = document.getElementById('selectedLabel');
+const resultsArea = document.getElementById('resultsArea');
+const summaryText = document.getElementById('summaryText');
+const downloadLink = document.getElementById('downloadLink');
+const previewVideo = document.getElementById('previewVideo');
+const statusEl = document.getElementById('status');
+
+/* timestamp mini UI */
+const timestampPanel = document.getElementById('timestampPanel');
+const timeChoose = document.getElementById('timeChoose');
+const timeFileEl = document.getElementById('timeFile');
+const timeSelected = document.getElementById('timeSelected');
+const timeGetBtn = document.getElementById('timeGetBtn');
+
+/* presenter mini UI */
+const presenterPanel = document.getElementById('presenterPanel');
+const imgChoose = document.getElementById('imgChoose');
+const imgFileEl = document.getElementById('imgFile');
+const imgSelected = document.getElementById('imgSelected');
+const imgGetBtn = document.getElementById('imgGetBtn');
+
+let uploadedFile = null; // test.mp4
+let timeFile = null;     // time.txt
+let imgFile = null;      // presenter image
+
+/* state */
+let countdownInterval = null;
+let secondsLeft = 0;
+let pollInterval = null;
+let polling = false;
+
+const MAX_BYTES = 1.2 * 1024 * 1024 * 1024; // 1.2 GB
+const POLL_INTERVAL_MS = 10000; // 10 seconds
+
+/* helpers */
+function showStatus(msg, error=false) {
+  statusEl.style.display = 'block';
+  statusEl.textContent = msg;
+  statusEl.style.color = error ? '#ffbbbb' : '#ffffff';
+  if (!error) setTimeout(()=> { if (statusEl && statusEl.textContent === msg) statusEl.style.display = 'none'; }, 7000);
+}
+function setButtonsDisabled(disabled) {
+  [fullBtn, userBtn, ...subButtons].forEach(b => b.disabled = disabled);
+  timeGetBtn.disabled = disabled;
+  imgGetBtn.disabled = disabled;
+}
+
+/* ============ Main file selection (test.mp4) ============ */
+chooseLabel.addEventListener('click', ()=> fileEl.click());
+fileEl.addEventListener('change', (e) => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) { selectedFile.textContent = 'No file selected'; uploadedFile = null; return; }
+  if (!f.name.toLowerCase().endsWith('.mp4')) { showStatus('Please choose an MP4', true); return; }
+  if (f.size > MAX_BYTES) { showStatus('File too large', true); return; }
+  uploadedFile = f;
+  selectedFile.textContent = `${f.name} (${Math.round(f.size/1024/1024)} MB)`;
+  showStatus('Main video ready');
+});
+
+/* drag & drop main upload card behavior (optional) */
+const uploadCard = document.getElementById('uploadCard');
+uploadCard.addEventListener('dragover', (e)=>{ e.preventDefault(); uploadCard.classList.add('dragover'); });
+uploadCard.addEventListener('dragleave', (e)=>{ e.preventDefault(); uploadCard.classList.remove('dragover'); });
+uploadCard.addEventListener('drop', (e) => {
+  e.preventDefault(); uploadCard.classList.remove('dragover');
+  const f = (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) || null;
+  if (f) {
+    fileEl.files = e.dataTransfer.files;
+    fileEl.dispatchEvent(new Event('change'));
+  }
+});
+
+/* ============ Sub-options reveal behavior ============ */
+userBtn.addEventListener('click', () => {
+  const hidden = subContainer.classList.contains('sub-hidden');
+  if (hidden) {
+    subContainer.classList.remove('sub-hidden');
+    subContainer.setAttribute('aria-hidden','false');
+    subContainer.style.opacity = 0;
+    subContainer.style.transform = 'translateY(12px)';
+    requestAnimationFrame(()=> {
+      subContainer.style.transition = 'opacity .35s ease, transform .35s ease';
+      subContainer.style.opacity = 1;
+      subContainer.style.transform = 'translateY(0)';
+    });
+  } else {
+    subContainer.style.transition = 'opacity .22s ease, transform .22s ease';
+    subContainer.style.opacity = 0;
+    subContainer.style.transform = 'translateY(12px)';
+    setTimeout(()=> {
+      subContainer.classList.add('sub-hidden');
+      subContainer.setAttribute('aria-hidden','true');
+      subContainer.style.transition = '';
+      // hide panels
+      timestampPanel.style.display = 'none';
+      presenterPanel.style.display = 'none';
+    }, 240);
+  }
+});
+
+/* when timestamp sub-button clicked -> show timestampPanel */
+document.getElementById('sub1').addEventListener('click', () => {
+  timestampPanel.style.display = 'block';
+  presenterPanel.style.display = 'none';
+});
+
+/* when presenter sub-button clicked -> show presenterPanel */
+document.getElementById('sub2').addEventListener('click', () => {
+  presenterPanel.style.display = 'block';
+  timestampPanel.style.display = 'none';
+});
+
+/* OCR coming soon: do nothing for now */
+document.getElementById('sub3').addEventListener('click', () => {
+  showStatus('OCR - coming soon (backend not implemented)', false);
+});
+
+/* ============ Timestamp mini UI wiring ============ */
+timeChoose.addEventListener('click', ()=> timeFileEl.click());
+timeFileEl.addEventListener('change', (e) => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) { timeSelected.textContent = 'No file'; timeFile = null; return; }
+  if (!f.name.toLowerCase().endsWith('.txt')) { showStatus('Please upload .txt file for timestamps', true); return; }
+  timeFile = f;
+  timeSelected.textContent = `${f.name} (${Math.round(f.size/1024)} KB)`;
+  showStatus('Timefile ready');
+});
+
+/* Timestamp "Get Video" click: upload test.mp4 + time.txt with mode=timestamp; processing UI for 5:00 */
+timeGetBtn.addEventListener('click', async () => {
+  if (!uploadedFile) { alert('Please upload test.mp4 first.'); return; }
+  if (!timeFile) { alert('Please upload time.txt first.'); return; }
+  setButtonsDisabled(true);
+  // upload with mode 'timestamp' and start polling; UI timer 5 minutes
+  const ok = await uploadFilesForMode(uploadedFile, { timefile: timeFile }, 'timestamp');
+  if (!ok) { setButtonsDisabled(false); return; }
+  startProcessingUI('Time-stamp summarization', 5); // 5 minutes UI
+  startPollingForResult();
+});
+
+/* ============ Presenter mini UI wiring ============ */
+imgChoose.addEventListener('click', ()=> imgFileEl.click());
+imgFileEl.addEventListener('change', (e) => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) { imgSelected.textContent = 'No file'; imgFile = null; return; }
+  const ext = (f.name.split('.').pop()||'').toLowerCase();
+  if (!['png','jpg','jpeg'].includes(ext)) { showStatus('Please upload PNG/JPG image', true); return; }
+  imgFile = f;
+  imgSelected.textContent = `${f.name} (${Math.round(f.size/1024)} KB)`;
+  showStatus('Presenter image ready');
+});
+
+/* Presenter "Get Video" click: upload test.mp4 + image with mode=presenter; processing UI 10:00 */
+imgGetBtn.addEventListener('click', async () => {
+  if (!uploadedFile) { alert('Please upload test.mp4 first.'); return; }
+  if (!imgFile) { alert('Please upload presenter image first.'); return; }
+  setButtonsDisabled(true);
+  const ok = await uploadFilesForMode(uploadedFile, { image: imgFile }, 'presenter');
+  if (!ok) { setButtonsDisabled(false); return; }
+  startProcessingUI('Presenter-image summarization', 10); // 10 minutes UI
+  startPollingForResult();
+});
+
+/* ============ Full-video flow (unchanged) ============ */
+fullBtn.addEventListener('click', async () => {
+  if (!uploadedFile) { alert('Please choose the test.mp4 file first (use Upload area or drag & drop).'); return; }
+  setButtonsDisabled(true);
+  // hide subpanels if open
+  timestampPanel.style.display = 'none';
+  presenterPanel.style.display = 'none';
+  const ok = await uploadFilesForMode(uploadedFile, {}, 'full');
+  if (!ok) { setButtonsDisabled(false); return; }
+  startProcessingUI('Full video summarization', 15);
+  startPollingForResult();
+});
+
+/* ============ Helper: upload files for a mode ============ */
+/* additionalFiles is an object with keys matching backend field names (timefile, image) */
+async function uploadFilesForMode(mainFile, additionalFiles={}, mode='full') {
+  if (!BACKEND_URL || BACKEND_URL.includes('REPLACE_WITH')) {
+    alert('Please set BACKEND_URL in the script to your public ngrok URL.');
+    return false;
+  }
+  try {
+    const fd = new FormData();
+    fd.append('video', mainFile, 'test.mp4');
+    fd.append('mode', mode);
+    // attach extras
+    if (additionalFiles.timefile) {
+      fd.append('timefile', additionalFiles.timefile, 'time.txt');
+    }
+    if (additionalFiles.image) {
+      // preserve original extension/name
+      fd.append('image', additionalFiles.image, additionalFiles.image.name || 'presenter.png');
+    }
+    showStatus('Uploading files to backend...');
+    const resp = await fetch(`${BACKEND_URL}/upload`, { method: 'POST', body: fd });
+    if (!resp.ok) {
+      const text = await resp.text().catch(()=> '');
+      showStatus('Upload failed: ' + (text || resp.statusText), true);
+      return false;
+    }
+    showStatus('Upload successful. Backend started execution.');
+    return true;
+  } catch (err) {
+    console.error('Upload error', err);
+    showStatus('Upload error: ' + String(err), true);
+    return false;
+  }
+}
+
+/* ============ UI timer (now accepts minutes) ============ */
+function startProcessingUI(selectionName='Full video', minutes=15) {
+  if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+  secondsLeft = Math.max(1, Math.floor(minutes*60));
+  processingArea.style.display = 'flex';
+  selectedLabel.textContent = `Mode: ${selectionName}`;
+  selectedLabel.style.display = 'block';
+  setButtonsDisabled(true);
+  resultsArea.style.display = 'none';
+  showStatus('Processing started — polling backend for results every 10s.');
+
+  (function updateTimer(){
+    const m = Math.floor(secondsLeft / 60);
+    const s = secondsLeft % 60;
+    timerEl.textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+    secondsLeft--;
+    if (secondsLeft < 0) {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+      showStatus('Processing UI timeout reached. If backend still running, refresh page to retry.', true);
+      finishProcessingUI();
+    }
+  })();
+
+  countdownInterval = setInterval(()=> {
+    const m = Math.floor(secondsLeft / 60);
+    const s = secondsLeft % 60;
+    timerEl.textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+    secondsLeft--;
+    if (secondsLeft < 0) {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+      showStatus('Processing UI timeout reached. If backend still running, refresh page to retry.', true);
+      finishProcessingUI();
+    }
+  }, 1000);
+}
+
+function finishProcessingUI() {
+  processingArea.style.opacity = 1;
+  processingArea.style.transition = 'opacity .35s ease';
+  processingArea.style.opacity = 0;
+  setTimeout(() => {
+    processingArea.style.display = 'none';
+    processingArea.style.opacity = '';
+    processingArea.style.transition = '';
+    timerEl.textContent = '15:00';
+    selectedLabel.style.display = 'none';
+    setButtonsDisabled(false);
+  }, 360);
+}
+
+/* ============ Polling for results (unchanged behavior but robust) ============ */
+async function fetchSummaryFallback(txtUrl) {
+  try {
+    const r = await fetch(`${txtUrl}?nocache=${Date.now()}`, { method:'GET', cache:'no-store' });
+    if (!r.ok) return '';
+    const ct = (r.headers.get('content-type') || '').toLowerCase();
+    if (ct.includes('html')) { console.warn('[fetchSummaryFallback] content-type HTML; ignoring'); return ''; }
+    const body = await r.text();
+    const low = body.trim().slice(0,300).toLowerCase();
+    if (low.startsWith('<!doctype') || low.startsWith('<html') || low.includes('<html')) {
+      console.warn('[fetchSummaryFallback] body looks like HTML; ignoring.');
+      return '';
+    }
+    return body || '';
+  } catch (e) {
+    console.warn('[fetchSummaryFallback] error', e);
+    return '';
+  }
+}
+
+async function startPollingForResult() {
+  if (!BACKEND_URL || BACKEND_URL.includes('REPLACE_WITH')) {
+    showStatus('BACKEND_URL not configured. Cannot poll backend.', true);
+    return;
+  }
+  if (polling) return;
+  polling = true;
+  let attempts = 0;
+  const maxAttempts = 200;
+  const preferCheckUrl = `${BACKEND_URL}/check`;
+  const preferTxtUrl   = `${BACKEND_URL}/output/summary.txt`;
+  const preferVidUrl   = `${BACKEND_URL}/output/summary_fixed.mp4`;
+  const altVidRoute    = `${BACKEND_URL}/summary.mp4`;
+
+  pollInterval = setInterval(async () => {
+    attempts++;
+    try {
+      // 1) /check JSON
+      try {
+        const chkResp = await fetch(`${preferCheckUrl}?nocache=${Date.now()}`, { method:'GET', cache:'no-store' });
+        const ctype = (chkResp.headers.get('content-type') || '').toLowerCase();
+        if (chkResp.ok && ctype.includes('application/json')) {
+          const j = await chkResp.json();
+          console.log('[poll] /check ->', j);
+          if (j && j.ready) {
+            let summary = (j.summary && j.summary.trim().length>0) ? j.summary : await fetchSummaryFallback(preferTxtUrl);
+            let videoUrl = preferVidUrl;
+            if (j.video_url && typeof j.video_url === 'string' && j.video_url.trim().length>0) {
+              videoUrl = j.video_url.startsWith('http') ? j.video_url : (BACKEND_URL + (j.video_url.startsWith('/') ? '' : '/') + j.video_url);
+            }
+            showResultAndStop(summary, videoUrl);
+            return;
+          }
+        } else {
+          if (!chkResp.ok) console.log('[poll] /check not-ok', chkResp.status);
+          else console.log('[poll] /check not-json', ctype);
+        }
+      } catch (e) { console.warn('[poll] /check failed', e); }
+
+      // 2) fallback to summary.txt + HEAD video
+      try {
+        const text = await fetchSummaryFallback(preferTxtUrl);
+        if (text && text.trim().length > 0) {
+          const vidHead = await fetch(`${preferVidUrl}?nocache=${Date.now()}`, { method:'HEAD', cache:'no-store' }).catch(()=> ({ ok:false }));
+          if (vidHead && vidHead.ok) {
+            showResultAndStop(text, preferVidUrl);
+            return;
+          } else {
+            const altHead = await fetch(`${altVidRoute}?nocache=${Date.now()}`, { method:'HEAD', cache:'no-store' }).catch(()=> ({ ok:false }));
+            if (altHead && altHead.ok) { showResultAndStop(text, altVidRoute); return; }
+            console.log('[poll] video not ready yet');
+          }
+        }
+      } catch (e) { console.warn('[poll] fallback check failed', e); }
+
+      // 3) last resort: if video exists alone, show link
+      try {
+        const vh = await fetch(`${preferVidUrl}?nocache=${Date.now()}`, { method:'HEAD', cache:'no-store' }).catch(()=> ({ ok:false }));
+        if (vh && vh.ok) {
+          const quickText = await fetchSummaryFallback(preferTxtUrl);
+          if (quickText && quickText.trim().length>0) {
+            showResultAndStop(quickText, preferVidUrl); return;
+          } else { showResultAndStop('(summary text not found)', preferVidUrl); return; }
+        }
+      } catch (e) { /* ignore */ }
+
+      if (attempts % 6 === 0) showStatus('Still processing on backend... (waiting)', false);
+      if (attempts > maxAttempts) {
+        clearInterval(pollInterval); polling = false;
+        showStatus('Backend did not respond. Stopping polling.', true);
+        finishProcessingUI();
+      }
+    } catch (err) {
+      console.error('[poll] main loop error', err);
+      if (attempts > maxAttempts) { clearInterval(pollInterval); polling = false; finishProcessingUI(); showStatus('Polling aborted due to errors', true); }
+    }
+  }, POLL_INTERVAL_MS);
+}
+
+/* ============ show results ============ */
+function showResultAndStop(summary, videoUrl) {
+  clearInterval(pollInterval); polling = false;
+  summaryText.textContent = summary || '(no summary text)';
+  resultsArea.style.display = 'block';
+  const finalVideoUrl = `${videoUrl}${videoUrl.includes('?') ? '&' : '?'}nocache=${Date.now()}`;
+  downloadLink.href = finalVideoUrl;
+  downloadLink.textContent = 'Download / Open summary_fixed.mp4';
+  previewVideo.src = finalVideoUrl;
+  previewVideo.style.display = 'block';
+  previewVideo.load();
+  if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+  finishProcessingUI();
+  showStatus('Summary ready — download or preview below.');
+}
+
+/* cleanup on unload */
+window.addEventListener('beforeunload', ()=> { if (countdownInterval) clearInterval(countdownInterval); if (pollInterval) clearInterval(pollInterval); });
+
+/* debug */
+console.log('Frontend ready. Remember to set BACKEND_URL to your ngrok URL.');
+
+</script>
+</body>
+</html>
