@@ -1,70 +1,56 @@
-# Multimodal_Video_Summarization_Final_Year_Project_2025
-This Repository Contains all the files related to Multimodal_Video_Summarization_Final_Year_Project_2025
+# 🎬 MultiModal Video Summarization
 
+> Single-file frontend + Colab/Flask backend that runs one of three notebooks depending on user choice:
+>
+> * **Full Video Summarization** (`mode=full`)
+> * **Time-Stamp Based Summarization** (`mode=timestamp`)
+> * **Presenter-Image Based Summarization** (`mode=presenter`)
 
-MultiModal Video Summarization 🎬✨
+This README is copy-paste ready for your GitHub repo — clear steps, commands, examples and troubleshooting. Use it as `README.md`.
 
-Single-file frontend + Colab/Flask backend that runs one of three notebooks depending on user choice:
+---
 
-Full Video Summarization (mode=full)
+## 📑 Table of contents
 
-Time-Stamp Based Summarization (mode=timestamp)
+* [What is this ❓](#what-is-this-)
+* [Features 🚀](#features-)
+* [Repository structure 📁](#repository-structure-)
+* [Prerequisites ⚙️](#prerequisites-️)
+* [Backend (Google Colab) — Quick start 🧪](#backend-google-colab---quick-start-)
+* [Frontend — index.html 🔗](#frontend---indexhtml-)
+* [How modes & file paths map 🔄](#how-modes--file-paths-map-)
+* [Testing the end-to-end flow ✅](#testing-the-end-to-end-flow-)
+* [Troubleshooting & common fixes 🛠️](#troubleshooting--common-fixes-)
+* [Security & production notes 🔒](#security--production-notes-)
+* [Helpful git commands for GitHub 📦](#helpful-git-commands-for-github-)
+* [Next steps & ideas ✨](#next-steps--ideas-)
+* [License 📄](#license-)
 
-Presenter-Image Based Summarization (mode=presenter)
+---
 
-This README is copy-paste ready for your GitHub repo — clear steps, commands, examples and troubleshooting. Use it as README.md.
+## ❓ What is this
 
-Table of contents
+This project provides a simple, attractive frontend (`index.html`) that uploads a `test.mp4` video and triggers server-side Colab notebooks via a small Flask server running in Google Colab (exposed with ngrok). The backend chooses one of three notebooks based on the `mode` parameter and returns a downloadable summary video + text.
 
-What is this
+---
 
-Features 🚀
+## 🚀 Features
 
-Repository structure 📁
+* Single-file frontend with polished UI and animations.
+* Upload `test.mp4` and choose between:
 
-Prerequisites ⚙️
+  * **Full summarization**
+  * **TimeStamp based summarization** (upload `time.txt`)
+  * **Presenter image based summarization** (upload image)
+* Backend runs the corresponding Colab notebook and re-encodes outputs for browser download.
+* Polling (`/check`) to update frontend when results are ready.
+* Outputs served at `/output/summary_fixed.mp4` and `/output/summary.txt`.
 
-Backend (Google Colab) — Quick start 🧪
+---
 
-Frontend — index.html 🔗
+## 📁 Repository structure
 
-How modes & file paths map 🔄
-
-Testing the end-to-end flow ✅
-
-Troubleshooting & common fixes 🛠️
-
-Security & production notes 🔒
-
-Helpful git commands for GitHub 📦
-
-Next steps & ideas ✨
-
-License 📄
-
-What is this ❓
-
-This project provides a simple, attractive frontend (index.html) that uploads a test.mp4 video and triggers server-side Colab notebooks via a small Flask server running in Google Colab (exposed with ngrok). The backend chooses one of three notebooks based on the mode parameter and returns a downloadable summary video + text.
-
-Features ✅
-
-Single-file frontend with polished UI and animations.
-
-Upload test.mp4 and choose between:
-
-Full summarization
-
-TimeStamp based summarization (upload time.txt)
-
-Presenter image based summarization (upload image)
-
-Backend runs the corresponding Colab notebook and re-encodes outputs for browser download.
-
-Polling (/check) to update frontend when results are ready.
-
-Outputs served at /output/summary_fixed.mp4 and /output/summary.txt.
-
-Repository structure 📁 (recommended)
+```
 .
 ├── frontend/
 │   └── index.html
@@ -76,191 +62,160 @@ Repository structure 📁 (recommended)
 │   └── Presenter_Image_Based_Summarization.ipynb
 ├── .gitignore
 └── README.md
+```
 
-Prerequisites ⚙️
+---
 
-Google account (for Colab).
+## ⚙️ Prerequisites
 
-ngrok authtoken (optional if using pyngrok from Colab which can request it).
+* Google account (for Colab).
+* `ngrok` authtoken (optional if using pyngrok from Colab which can request it).
+* Modern browser for frontend.
+* The frontend `BACKEND_URL` must be set to the ngrok public URL printed by the Colab backend (no trailing slash).
 
-Modern browser for frontend.
+---
 
-The frontend BACKEND_URL must be set to the ngrok public URL printed by the Colab backend (no trailing slash).
+## 🧪 Backend (Google Colab) — Quick start
 
-Backend (Google Colab) — Quick start 🧪
+1. Open a new Colab and paste the provided backend server code into a cell (the Flask + pyngrok script).
+2. Make sure notebook paths at the top match your actual notebook filenames:
 
-Open a new Colab and paste the provided backend server code into a cell (the Flask + pyngrok script).
+   ```python
+   NOTEBOOK_FULL      = '/content/Full_Video_Summarization_final.ipynb'
+   NOTEBOOK_TIMESTAMP = '/content/Time_Stamp_Based_Final_.ipynb'
+   NOTEBOOK_PRESENTER = '/content/Presenter_Image_Based_Summarization.ipynb'
+   ```
+3. Run the cell. It installs dependencies, starts Flask and opens an ngrok URL. Colab prints something like:
 
-Make sure notebook paths at the top match your actual notebook filenames:
+   ```
+   🚀 PUBLIC URL: https://abcd-1234.ngrok-free.app
+   ```
+4. Copy that URL and set in your frontend `index.html` as `BACKEND_URL`.
 
-NOTEBOOK_FULL      = '/content/Full_Video_Summarization_final.ipynb'
-NOTEBOOK_TIMESTAMP = '/content/Time_Stamp_Based_Final_.ipynb'
-NOTEBOOK_PRESENTER = '/content/Presenter_Image_Based_Summarization.ipynb'
+**Important Colab file paths (canonical):**
 
+* Input video: `/content/input/test.mp4`
+* Timestamp file: `/content/input/time.txt`
+* Presenter image: `/content/input/presenter_image.<ext>`
+* Raw outputs:
 
-Run the cell. It installs dependencies, starts Flask and opens an ngrok URL. Colab prints something like:
+  * Full: `/content/summary_video.mp4`
+  * Timestamp: `/content/timestamp_requested.mp4`
+  * Presenter: `/content/presenter_requested.mp4`
+* Final re-encoded output: `/content/output/summary_fixed.mp4`
+* Final text summary: `/content/output/summary.txt`
 
-🚀 PUBLIC URL: https://abcd-1234.ngrok-free.app
+---
 
+## 🔗 Frontend — index.html
 
-Copy that URL and set in your frontend index.html as BACKEND_URL.
+* Replace `BACKEND_URL` near the top of `index.html` with your ngrok URL, e.g.
 
-Important Colab file paths (canonical):
+  ```javascript
+  const BACKEND_URL = 'https://abcd-1234.ngrok-free.app';
+  ```
+* Open `index.html` in your browser, upload files, and choose the mode.
 
-Input video saved by server: /content/input/test.mp4
+---
 
-Timestamp file (timestamp mode): /content/input/time.txt
+## 🔄 How modes & file paths map
 
-Presenter image (presenter mode): /content/input/presenter_image.<ext>
+* **`mode=full`**
 
-Raw outputs produced by notebooks:
+  * Notebook: `NOTEBOOK_FULL`
+  * Output: `/content/summary_video.mp4`
+* **`mode=timestamp`**
 
-Full: /content/summary_video.mp4
+  * Notebook: `NOTEBOOK_TIMESTAMP`
+  * Input: `/content/input/time.txt`
+  * Output: `/content/timestamp_requested.mp4`
+* **`mode=presenter`**
 
-Timestamp: /content/timestamp_requested.mp4
+  * Notebook: `NOTEBOOK_PRESENTER`
+  * Input: `/content/input/presenter_image.<ext>`
+  * Output: `/content/presenter_requested.mp4`
 
-Presenter: /content/presenter_requested.mp4
+**Backend behavior:** re-encodes the raw file → `/content/output/summary_fixed.mp4` + `/content/output/summary.txt`.
 
-Final re-encoded output (what frontend uses): /content/output/summary_fixed.mp4
+---
 
-Final text summary: /content/output/summary.txt
+## ✅ Testing the end-to-end flow
 
-Frontend — index.html 🔗
+1. Launch backend in Colab and copy `PUBLIC URL`.
+2. Edit `index.html` → set `BACKEND_URL`.
+3. Open `index.html` in browser.
+4. Upload video and choose a mode.
+5. Wait until frontend polls `/check` and shows the results.
 
-Replace BACKEND_URL near the top of index.html with your ngrok URL, e.g.
+---
 
-const BACKEND_URL = 'https://abcd-1234.ngrok-free.app';
+## 🛠️ Troubleshooting & common fixes
 
+* **Results not shown** → Confirm `/content/output/summary_fixed.mp4` exists.
+* **`/check` returns HTML** → Ensure polling the correct backend URL.
+* **CORS errors** → Use HTTPS ngrok + open frontend via local server (`python -m http.server`).
+* **ngrok URL changes** → Update `BACKEND_URL` after restart.
 
-Open index.html in your browser (double-click or serve via a static server). Upload test.mp4, choose a mode and upload any extra file required (time.txt or image), then click the appropriate button.
+---
 
-How modes & file paths map 🔄
+## 🔒 Security & production notes
 
-mode=full
+* This setup is for testing/dev. Do not expose ngrok URL publicly.
+* Add authentication in production.
+* Restrict file sizes/types.
 
-Notebook: NOTEBOOK_FULL
+---
 
-Notebook expected to produce: /content/summary_video.mp4 (or directly write /content/output/summary_fixed.mp4 & /content/output/summary.txt)
+## 📦 Helpful git commands for GitHub
 
-mode=timestamp
-
-Notebook: NOTEBOOK_TIMESTAMP
-
-Input file: /content/input/time.txt
-
-Notebook expected to produce: /content/timestamp_requested.mp4
-
-mode=presenter
-
-Notebook: NOTEBOOK_PRESENTER
-
-Input file: /content/input/presenter_image.<ext>
-
-Notebook expected to produce: /content/presenter_requested.mp4
-
-Backend behavior: after the selected notebook finishes, backend re-encodes the raw file for the browser and writes /content/output/summary_fixed.mp4, then /check becomes ready: true.
-
-Testing the end-to-end flow ✅
-
-Launch the Colab backend and copy the PUBLIC URL.
-
-Edit index.html and set BACKEND_URL to that URL (no trailing slash).
-
-Open index.html in browser.
-
-Upload test.mp4.
-
-For Full Video:
-
-Click Full Video Summarization. Wait for the 15:00 UI timeout or until the backend finishes. Frontend polls /check every 10s and will show the summary video + text when ready.
-
-For TimeStamp:
-
-Click User Request Based Summarization → Time Stamp Based. Upload time.txt. Click Get Video (5:00). Wait.
-
-For Presenter:
-
-Click Presenter Images Based. Upload presenter image (PNG/JPG). Click Get Video (10:00). Wait.
-
-Once done, you will see summary text and a link + embedded player for summary_fixed.mp4.
-
-Troubleshooting & common fixes 🛠️
-
-Frontend never shows results but backend has outputs
-
-Confirm /content/output/summary_fixed.mp4 exists in Colab. Backend only signals ready when this exact file exists.
-
-Check Colab logs: the backend prints which raw file it expected and whether re-encode ran.
-
-/check returns HTML instead of JSON
-
-Make sure you're polling the correct backend URL (/check) and not the Colab notebook UI. Check console network tab for response body.
-
-CORS / Mixed content errors
-
-Use https ngrok URL and open frontend with file:// sometimes causes issues. Open a simple local HTTP server (python -m http.server) and use http://localhost:8000/index.html if needed.
-
-ngrok URL changed after restarting Colab
-
-Update BACKEND_URL in index.html each time you restart the Colab backend.
-
-Notebook takes longer than UI timeout
-
-Increase --ExecutePreprocessor.timeout in backend run_notebook() or increase frontend timer.
-
-Raw output has different name
-
-Edit the backend constant RAW_SUMMARY_* to match your notebook outputs.
-
-Security & production notes 🔒
-
-This setup is for testing/development. Do not expose ngrok URL publicly for production use.
-
-Add authentication (API key / token) before accepting uploads in production. I can add that if required.
-
-Limit upload size and file types to avoid abuse. Backend currently checks for file presence but not heavy validation.
-
-Helpful git commands for GitHub 📦
-# initialize repo (run in project root)
+```bash
+# initialize repo
 git init
 git add .
-git commit -m "Initial commit - multimodal video summarization frontend + backend"
-# create remote and push (replace URL)
+git commit -m "Initial commit"
+
+# add remote and push
 git remote add origin git@github.com:yourname/your-repo.git
 git branch -M main
 git push -u origin main
+```
 
-Recommended .gitignore
-# Python / Notebook
+**Recommended `.gitignore`:**
+
+```
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 *.ipynb_checkpoints/
-# OS
 .DS_Store
-# Colab output and media large files (do not push big videos)
 content/
 *.mp4
 *.avi
 *.mov
-# node / build
 node_modules/
 dist/
 .env
+```
 
-Next steps & ideas ✨
+---
 
-Add authentication to /upload.
+## ✨ Next steps & ideas
 
-Save per-job directories and allow multiple jobs (job IDs).
+* Add authentication to `/upload`.
+* Support multiple jobs with job IDs.
+* Show live notebook logs in frontend.
+* Add webhook/email notifications.
+* Dockerize backend for deployment.
 
-Show live notebook logs in frontend.
+---
 
-Add webhook/email notification on completion.
+## 📄 License
 
-Dockerize the backend for deployment.
+MIT or any license of your choice.
 
-License 📄
+---
 
-Use whatever license you prefer. If you want, I can add an MIT license file for you.
+### 🥳 Final note
+
+You now have a full E2E system with frontend, backend, and multiple notebooks. Update small placeholders (`BACKEND_URL`, notebook names) and push this README to GitHub.
