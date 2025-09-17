@@ -1,0 +1,2 @@
+# Multimodal_Video_Summarization_Final_Year_Project_2025
+This Repository Contains all the files related to Multimodal_Video_Summarization_Final_Year_Project_2025
