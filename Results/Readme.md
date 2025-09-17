@@ -1,1 +1,5 @@
-This folder contains the results of all three Google Colab notebook: full_video_summarization, timestamp_based_summarization, and face_recognition_based_summarization.
+All Results file are at this drive link: https://drive.google.com/drive/folders/1fnxO1Wb4GONhsAPm-RZwN-X7OnRDE_vk?usp=sharing
+
+
+<br>
+As the file sizes are large, that's why they cannot be uploaded in GitHub. Please check out in the Google Drive link.
