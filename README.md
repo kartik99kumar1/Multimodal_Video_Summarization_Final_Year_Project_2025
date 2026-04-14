@@ -162,7 +162,7 @@ git push origin feature-x
 
 **Kartik Kumar**
 USN: `1CD22CS061`
-Cambridge Institute of Technology, Bangalore
+Cambridge Institute of Technology, Bangalore, Karnataka India
 
 
 
